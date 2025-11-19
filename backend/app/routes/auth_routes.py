@@ -33,9 +33,8 @@ async def register_user(user: RegisterUser, mongodb=Depends(get_mongodb)):
     user_dict.setdefault("is_active", False)
     user_dict.setdefault("created_at", datetime.utcnow())
 
-    # insert_result = await mongodb["users"].insert_one(user_dict)
-    inserted_user = await mongodb["users"].find_one({"username": "hardcore"})#({"_id": insert_result.inserted_id})
-
+    insert_result = await mongodb["users"].insert_one(user_dict)
+    inserted_user = await mongodb["users"].find_one({"_id": insert_result.inserted_id})
 
     code = my_rand(6)
     ver_data: VerifyModel = get_verification_data(inserted_user["username"], code,)
@@ -44,7 +43,6 @@ async def register_user(user: RegisterUser, mongodb=Depends(get_mongodb)):
 
     try:
         send_welcome_email.delay(user.email, user.username, code)
-        # await send_email(user.email, "Welcome to Our Service", template)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to send verification email: {e}")
 
@@ -87,7 +85,7 @@ async def resend_verification_code(data: UsernameRequest, mongodb=Depends(get_mo
     template = registration_template(user['name'], code)
 
     try:
-        await send_email(user["email"], "Resend Verification Code", template)
+        send_welcome_email.delay(user.email, user.username, code)
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to send verification email")
 
