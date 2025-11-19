@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   mongodb:
     image: mongo:6.0
@@ -16,6 +17,14 @@ services:
     logging:
       driver: "none"
 
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - project-network
+
   fastapi-backend:
     build:
       context: ./backend
@@ -28,6 +37,39 @@ services:
       - project-network
     depends_on:
       - mongodb
+      - redis
+    volumes:
+      - ./backend:/app
+
+  celery_worker:
+    build:
+      context: ./backend
+    container_name: celery_worker
+    command: celery -A app.celery.celery_app worker --loglevel=info
+    working_dir: /app
+    networks:
+      - project-network
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - redis
+      - fastapi-backend
+    volumes:
+      - ./backend:/app
+
+  celery_beat:
+    build:
+      context: ./backend
+    container_name: celery_beat
+    command: celery -A app.celery.celery_app beat --loglevel=info
+    working_dir: /app
+    networks:
+      - project-network
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - redis
+      - fastapi-backend
     volumes:
       - ./backend:/app
 

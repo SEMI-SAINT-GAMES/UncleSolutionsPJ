@@ -10,7 +10,7 @@ from core.utilies.auth.auth_utilies import hash_password, verify_password
 from core.utilies.auth.jwt_handlers import create_jwt_token, decode_jwt_token
 from core.utilies.auth.verification_handlers import get_verification_data, check_verification_data
 from core.utilies.helpers import my_rand
-
+from app.celery.tasks import send_welcome_email
 auth_router = APIRouter()
 
 
@@ -33,18 +33,20 @@ async def register_user(user: RegisterUser, mongodb=Depends(get_mongodb)):
     user_dict.setdefault("is_active", False)
     user_dict.setdefault("created_at", datetime.utcnow())
 
-    insert_result = await mongodb["users"].insert_one(user_dict)
-    inserted_user = await mongodb["users"].find_one({"_id": insert_result.inserted_id})
+    # insert_result = await mongodb["users"].insert_one(user_dict)
+    inserted_user = await mongodb["users"].find_one({"username": "hardcore"})#({"_id": insert_result.inserted_id})
+
 
     code = my_rand(6)
     ver_data: VerifyModel = get_verification_data(inserted_user["username"], code,)
     await mongodb["verify_codes"].delete_many({"username": inserted_user["username"]})
     await mongodb["verify_codes"].insert_one(ver_data)
-    template = registration_template(user.name, code)
+
     try:
-        await send_email(user.email, "Welcome to Our Service", template)
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to send verification email")
+        send_welcome_email.delay(user.email, user.username, code)
+        # await send_email(user.email, "Welcome to Our Service", template)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to send verification email: {e}")
 
     inserted_user.pop("password", None)
     return inserted_user
