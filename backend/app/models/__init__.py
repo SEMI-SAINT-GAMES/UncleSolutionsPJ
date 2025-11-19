@@ -41,6 +41,9 @@ class VerifyRequest(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     email: str
 
+class UsernameRequest(BaseModel):
+    username: str
+
 class ResetPasswordRequest(BaseModel):
     verify: VerifyRequest
     new_password: str
