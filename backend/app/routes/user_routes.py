@@ -1,27 +1,81 @@
-from fastapi import APIRouter, HTTPException
-from app import db
-from app.models import User, PyObjectId
+from typing import List
+
 from bson import ObjectId
-from typing import Optional
+from fastapi import APIRouter, HTTPException, Depends
+
+from app.models import PaginationResponseModel
+from app.models.article_models import ProfileModel
+from app.models.user_models import UpdateUserDTO, User
+from core.db.mongo import get_mongodb
+from core.pagination import Pagination
+from core.utilies.auth.jwt_handlers import get_current_user_id
+
 user_router = APIRouter()
-@user_router.get("/user", response_model=list[User])
-async def get_users():
-    users = db["users"].find()
-    return [User(**user) for user in users]
 
-@user_router.get("/users/{user_id}", response_model=User)
-async def get_user(user_id: PyObjectId):
-    user = await db["users"].find_one({"_id": ObjectId(user_id)})
-    if user:
-        return User(**user)
-    raise HTTPException(status_code=404, detail="User not found")
+@user_router.get("/profile", response_model=ProfileModel)
+async def profile(user_id: str = Depends(get_current_user_id), mongodb = Depends(get_mongodb), pagination: Pagination = Depends()):
+    if not user_id:
+        raise HTTPException(401, "Unauthorized")
 
-@user_router.post("/users", response_model=User)
-async def create_user(user: User):
-    try:
-        user_dict = user.dict(by_alias=True)
-        result = await db["user"].insert_one(user_dict)
-        inserted_user = await db["users"].find_one({"_id": result.inserted_id})
-        return User(**inserted_user)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create user{str(e)}")
+    pipeline = [
+        {"$match": {"_id": ObjectId(user_id)}},
+        {
+            "$lookup": {
+                "from": "articles",
+                "let": {"user_id": "$_id"},
+                "pipeline": [
+                    {"$match": {"$expr": {"$eq": ["$author_id", "$$user_id"]}, "is_active": True}},
+                    {"$sort": {"created_at": -1}},
+                    {
+                        "$facet": {
+                            "paginated": [
+                                {"$skip": pagination.skip},
+                                {"$limit": pagination.limit}
+                            ],
+                            "page_info": [
+                                {"$count": "total_count"}
+                            ]
+                        }
+                    }
+                ],
+                "as": "articles"
+            }
+        }
+    ]
+
+    result = await mongodb["users"].aggregate(pipeline).to_list(length=1)
+    if not result:
+        raise HTTPException(404, "User not found")
+    user_data = result[0]
+    total_count = user_data["articles"][0]["page_info"][0]["total_count"] if user_data["articles"][0]["page_info"] else 0
+    total_pages = (total_count + pagination.limit - 1) // pagination.limit
+    page_info = pagination.create_user_profile_pagination_response(total_count)
+    user_data["articles"] = {
+        "page_info": page_info,
+        "paginated": user_data["articles"][0]["paginated"]
+    }
+    return ProfileModel(**user_data)
+
+@user_router.get("/", response_model=PaginationResponseModel[User])
+async def read_users(mongodb = Depends(get_mongodb), pagination: Pagination = Depends()):
+    total = await mongodb["users"].count_documents({"is_active": True})
+    cursor = mongodb["users"].find({"is_active": True}).skip(pagination.skip).limit(pagination.limit)
+    users = await cursor.to_list(length=pagination.limit)
+    response = pagination.create_pagination_response(total, users)
+    return response
+
+
+@user_router.get("/{email}", response_model=User)
+async def read_user_by_email(email: str, mongodb = Depends(get_mongodb)):
+    user = await mongodb["users"].find_one({"email": email})
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+@user_router.put("/update/{email}", response_model=User)
+async def update_user(email: str, dto: UpdateUserDTO, mongodb = Depends(get_mongodb)):
+    await mongodb["users"].update_one(
+        {"email": email},
+        {"$set": dto.dict(exclude_unset=True)}
+    )
+    return await mongodb["users"].find_one({"email": email})
+
