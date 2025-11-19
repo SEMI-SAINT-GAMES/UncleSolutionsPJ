@@ -6,9 +6,6 @@ from app.models import User, LoginUser
 
 auth_router = APIRouter()
 
-
-
-
 @auth_router.post("/register")
 async def register_user(user: User):
     existing_user = db["users"].find_one({"email": user.email, "username": user.username})

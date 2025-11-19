@@ -1,13 +1,6 @@
 import os
+from pymongo import MongoClient
 
 
-# from pymongo import MongoClient
-#
-#
-#
-# MONGO_URL = os.getenv("MONGO_URL")
-# DATABASE_NAME = os.getenv("DATABASE_NAME")
-#
-#
-# client = MongoClient(MONGO_URL)
-# db = client[DATABASE_NAME]
+client = MongoClient(os.getenv("MONGO_URL"))
+db = client[os.getenv("DATABASE_NAME")]
