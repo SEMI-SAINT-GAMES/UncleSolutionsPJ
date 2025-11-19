@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - project-network
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    command: ["--quiet"]   # <-- прибирає зайві логи
+
+  fastapi-backend:
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    container_name: fastapi-backend
+    ports:
+      - "8000:8000"
+    networks:
+      - project-network
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+
+volumes:
+  mongodb_data:
+
+networks:
+  project-network:
