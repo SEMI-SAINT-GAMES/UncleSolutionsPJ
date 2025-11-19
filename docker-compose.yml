@@ -12,7 +12,9 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: secret
-    command: ["--quiet"]   # <-- прибирає зайві логи
+    command: ["--quiet"]
+    logging:
+      driver: "none"
 
   fastapi-backend:
     build:

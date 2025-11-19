@@ -22,13 +22,16 @@ class User(BaseModel):
     surname: str
     username: str
     email: str
-    password: str
 
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
+class RegisterUser(User):
+    password: str
+
 class LoginUser(BaseModel):
-    username: str
+    username: Optional[str] = None
+    email: Optional[str] = None
     password: str
 

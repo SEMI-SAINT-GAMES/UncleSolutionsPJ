@@ -1,13 +1,12 @@
 from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta
 import jwt
 from passlib.context import CryptContext
+import os
 
-from app import db
-
-ACCESS_SECRET_KEY = "mY7s3cReT!k3y_f0r_jWt_2025"
-ALGORITHM = "HS256"
+ACCESS_SECRET_KEY = os.getenv("ACCESS_SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -30,16 +29,13 @@ def create_jwt_token(data: dict, expires: int | None = None):
 
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_username(token: str = Depends(oauth2_scheme), ):
     try:
         payload = jwt.decode(token, ACCESS_SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
+        return username
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    user = db["users"].find_one({"username": username})
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
