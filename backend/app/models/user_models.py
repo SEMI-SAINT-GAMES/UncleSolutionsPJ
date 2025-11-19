@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field
 from bson import ObjectId
 
@@ -24,4 +24,8 @@ class LoginUser(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     password: str
+
+class UpdateUserDTO(BaseModel):
+    other_names: List[str] = None
+    age: int = None
 

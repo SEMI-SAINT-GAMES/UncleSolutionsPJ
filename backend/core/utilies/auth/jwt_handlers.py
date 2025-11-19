@@ -1,0 +1,40 @@
+from datetime import datetime, timedelta
+import jwt
+import os
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+
+def create_jwt_token(data: dict, expires: int | None = None):
+    to_encode = data.copy()
+    if expires:
+        expire = datetime.utcnow() + timedelta(minutes=expires)
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=30)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_jwt_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise Exception("Token expired")
+    except jwt.InvalidTokenError:
+        raise Exception("Invalid token")
+
+def get_current_username(token: str = Depends(oauth2_scheme), ):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload.get("sub")
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
