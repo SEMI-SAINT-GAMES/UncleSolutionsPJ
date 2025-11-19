@@ -8,7 +8,7 @@ from app.routes.article_routes import article_router
 from core.db.mongo import connect_to_mongo, close_mongo
 load_dotenv()
 app = FastAPI(lifespan=lifespan)
-app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
-app.include_router(user_router, prefix="/api/users", tags=["Users"])
+app.include_router(auth_router, prefix="/auth", tags=["Auth"])
+app.include_router(user_router, prefix="/users", tags=["Users"])
 
-app.include_router(article_router, prefix="/api/articles", tags=["Articles"])
+app.include_router(article_router, prefix="/articles", tags=["Articles"])
