@@ -3,38 +3,66 @@ from typing import List
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
 
+from app.models import PaginationResponseModel
 from app.models.article_models import ProfileModel
 from app.models.user_models import UpdateUserDTO, User
 from core.db.mongo import get_mongodb
+from core.pagination import Pagination
 from core.utilies.auth.jwt_handlers import get_current_user_id
 
 user_router = APIRouter()
 
 @user_router.get("/profile", response_model=ProfileModel)
-async def profile(user_id: str = Depends(get_current_user_id), mongodb = Depends(get_mongodb)):
-    print(user_id)
+async def profile(user_id: str = Depends(get_current_user_id), mongodb = Depends(get_mongodb), pagination: Pagination = Depends()):
     if not user_id:
         raise HTTPException(401, "Unauthorized")
+
     pipeline = [
         {"$match": {"_id": ObjectId(user_id)}},
         {
-            "$lookup":{
+            "$lookup": {
                 "from": "articles",
-                "localField": "_id",
-                "foreignField": "author_id",
+                "let": {"user_id": "$_id"},
+                "pipeline": [
+                    {"$match": {"$expr": {"$eq": ["$author_id", "$$user_id"]}, "is_active": True}},
+                    {"$sort": {"created_at": -1}},
+                    {
+                        "$facet": {
+                            "paginated": [
+                                {"$skip": pagination.skip},
+                                {"$limit": pagination.limit}
+                            ],
+                            "page_info": [
+                                {"$count": "total_count"}
+                            ]
+                        }
+                    }
+                ],
                 "as": "articles"
             }
         }
     ]
-    user = await mongodb["users"].aggregate(pipeline).to_list(length=1)
-    if not user:
-        raise HTTPException(404, "User not found")
-    return ProfileModel(**user[0])
 
-@user_router.get("/", response_model=List[User])
-async def read_users(mongodb = Depends(get_mongodb)):
-    users = await mongodb["users"].find().to_list(None)
-    return users
+    result = await mongodb["users"].aggregate(pipeline).to_list(length=1)
+    if not result:
+        raise HTTPException(404, "User not found")
+    user_data = result[0]
+    total_count = user_data["articles"][0]["page_info"][0]["total_count"] if user_data["articles"][0]["page_info"] else 0
+    total_pages = (total_count + pagination.limit - 1) // pagination.limit
+    page_info = pagination.create_user_profile_pagination_response(total_count)
+    user_data["articles"] = {
+        "page_info": page_info,
+        "paginated": user_data["articles"][0]["paginated"]
+    }
+    return ProfileModel(**user_data)
+
+@user_router.get("/", response_model=PaginationResponseModel[User])
+async def read_users(mongodb = Depends(get_mongodb), pagination: Pagination = Depends()):
+    total = await mongodb["users"].count_documents({"is_active": True})
+    cursor = mongodb["users"].find({"is_active": True}).skip(pagination.skip).limit(pagination.limit)
+    users = await cursor.to_list(length=pagination.limit)
+    response = pagination.create_pagination_response(total, users)
+    return response
 
 
 @user_router.get("/{email}", response_model=User)

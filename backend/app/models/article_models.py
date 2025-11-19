@@ -4,7 +4,7 @@ from bson import ObjectId
 from pydantic import BaseModel, Field
 
 from app.models import PyObjectId, CreateModel
-from app.models.user_models import UserOut, UserBase
+from app.models.user_models import UserOut, UserBase, User
 
 
 class ArticleBase(BaseModel):
@@ -26,8 +26,18 @@ class ArticleCreate(ArticleBase, CreateModel):
 
 
 class ArticleOut(Article):
-    author: UserOut
+    author: UserOut | None = None
 
-class ProfileModel(UserBase):
-    articles: List[Article] = []
+class PageInfo(BaseModel):
+    total_count: int
+    total_pages: int
+    current_page: int
+    limit: int
+
+class ArticleInProfileModel(BaseModel):
+    paginated: List[Article]
+    page_info: PageInfo
+
+class ProfileModel(User):
+    articles: ArticleInProfileModel
 

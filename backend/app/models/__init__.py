@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional
-
+from typing import Optional, TypeVar, Generic, List
+from pydantic.generics import GenericModel
 from bson import ObjectId
 from pydantic import GetCoreSchemaHandler, BaseModel, Field
 
@@ -24,3 +24,12 @@ class PyObjectId(ObjectId):
     @classmethod
     def __get_pydentic_json_schema__(cls, source, handler: GetCoreSchemaHandler):
         return handler(str)
+
+
+T = TypeVar("T")
+class PaginationResponseModel(GenericModel, Generic[T]):
+    total_count: int
+    total_pages: int
+    current_page: int
+    limit: int
+    items: List[T]
