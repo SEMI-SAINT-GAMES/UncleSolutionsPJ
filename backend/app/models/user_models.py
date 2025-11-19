@@ -1,20 +1,23 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from bson import ObjectId
 
+from app.models import PyObjectId
 
-
-class User(BaseModel):
+class UserBase(BaseModel):
     name: str
     surname: str
     username: str
     email: str
 
+class User(UserBase):
+    id: Optional[PyObjectId] = Field(alias="_id")
+
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
-class RegisterUser(User):
+class RegisterUser(UserBase):
     password: str
 
 class LoginUser(BaseModel):

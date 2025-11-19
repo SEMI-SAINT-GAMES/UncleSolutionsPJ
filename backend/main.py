@@ -3,7 +3,7 @@ import os
 
 from fastapi import FastAPI, HTTPException, Depends
 
-from app.models import User, LoginUser, RegisterUser  # import the user model defined by us
+from app.models.user_models import User, LoginUser, RegisterUser  # import the user model defined by us
 
 # imports for the MongoDB database connection
 from motor.motor_asyncio import AsyncIOMotorClient
