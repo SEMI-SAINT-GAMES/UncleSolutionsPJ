@@ -29,7 +29,8 @@ async def login(dto: LoginUser, mongodb = Depends(get_mongodb)):
     if not user or not verify_password(dto.password, user["password"]):
         raise HTTPException(401, "Invalid credentials")
     access = create_jwt_token({"sub": user["username"]})
-    return {"access": access}
+    refresh = create_jwt_token({"sub": user["username"]}, expires=1440)
+    return {"access": access, "refresh": refresh}
 
 
 @auth_router.post("/refresh")

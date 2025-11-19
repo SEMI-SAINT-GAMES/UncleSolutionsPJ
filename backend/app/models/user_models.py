@@ -1,8 +1,10 @@
+from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from bson import ObjectId
 
-from app.models import PyObjectId
+from app.models import PyObjectId, CreateModel, UpdateModel
+
 
 class UserBase(BaseModel):
     name: str
@@ -12,20 +14,22 @@ class UserBase(BaseModel):
 
 class User(UserBase):
     id: Optional[PyObjectId] = Field(alias="_id")
-
+    is_active: bool = True
+    is_author: bool = False
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
-class RegisterUser(UserBase):
+class RegisterUser(UserBase, CreateModel):
     password: str
 
 class LoginUser(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
     password: str
+    last_login: datetime = Field(default_factory=datetime.utcnow)
 
-class UpdateUserDTO(BaseModel):
-    other_names: List[str] = None
-    age: int = None
+
+class UpdateUserDTO(UserBase, UpdateModel):
+    pass
 
