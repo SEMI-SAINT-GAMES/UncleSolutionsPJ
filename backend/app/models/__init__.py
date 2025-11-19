@@ -20,6 +20,7 @@ class PyObjectId(ObjectId):
         if not ObjectId.is_valid(v):
             raise ValueError("Invalid objectid")
         return ObjectId(v)
+
     @classmethod
     def __get_pydentic_json_schema__(cls, source, handler: GetCoreSchemaHandler):
         return handler(str)

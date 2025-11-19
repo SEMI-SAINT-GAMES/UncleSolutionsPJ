@@ -7,8 +7,8 @@ from core.utilies.auth.jwt_handlers import get_current_username
 
 user_router = APIRouter()
 
-@user_router.get("/me", response_model=User)
-async def me(username: str = Depends(get_current_username), mongodb = Depends(get_mongodb)):
+@user_router.get("/profile", response_model=User)
+async def profile(username: str = Depends(get_current_username), mongodb = Depends(get_mongodb)):
     user = mongodb["users"].find_one({"username": username})
     if not user:
         raise HTTPException(404, "User not found")

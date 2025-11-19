@@ -4,13 +4,13 @@ from bson import ObjectId
 from pydantic import BaseModel, Field
 
 from app.models import PyObjectId, CreateModel
+from app.models.user_models import UserOut
 
 
 class ArticleBase(BaseModel):
     title: str
     content: str
     tags: Optional[list[str]] = []
-    author_id: Optional[PyObjectId] = None
 
 
 
@@ -22,5 +22,10 @@ class Article(ArticleBase):
         json_encoders = {ObjectId: str}
 
 class ArticleCreate(ArticleBase, CreateModel):
-    pass
+    author_id: Optional[PyObjectId] = None
+
+
+class ArticleOut(Article):
+    author: UserOut
+
 

@@ -33,3 +33,13 @@ class LoginUser(BaseModel):
 class UpdateUserDTO(UserBase, UpdateModel):
     pass
 
+class UserOut(BaseModel):
+    id: PyObjectId = Field(alias="_id")
+    name: str
+    surname: str
+    username: str
+    email: str
+
+    class Config:
+        allow_population_by_field_name = True
+        json_encoders = {ObjectId: str}
