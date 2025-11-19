@@ -32,6 +32,9 @@ def decode_jwt_token(token: str):
     except jwt.InvalidTokenError:
         raise Exception("Invalid token")
 
+def refresh_jwt_token(payload: str):
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
 def get_current_username(token: str = Depends(oauth2_scheme), ):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -48,3 +51,13 @@ def get_current_user_id(token: str = Depends(oauth2_scheme), ):
         return user_id
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+def create_data_jwt_token(token: str, expires: datetime, type:str):
+    user_id = get_current_user_id(token)
+    data = {
+        "token": token,
+        "type": type,
+        "expire_at": expires,
+        "user_id": user_id
+    }
+    return data

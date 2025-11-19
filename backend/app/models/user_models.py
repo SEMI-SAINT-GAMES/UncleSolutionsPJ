@@ -22,6 +22,7 @@ class User(UserBase):
 
 class RegisterUser(UserBase, CreateModel):
     password: str
+    is_author: bool = False
 
 class LoginUser(BaseModel):
     username: Optional[str] = None

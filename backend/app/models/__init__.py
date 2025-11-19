@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, TypeVar, Generic, List
 from pydantic.generics import GenericModel
 from bson import ObjectId
@@ -33,3 +33,18 @@ class PaginationResponseModel(GenericModel, Generic[T]):
     current_page: int
     limit: int
     items: List[T]
+
+class VerifyRequest(BaseModel):
+    code: str
+    username: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    verify: VerifyRequest
+    new_password: str
+class VerifyModel(BaseModel):
+    hashcode: str
+    username: str
+    expire_at: datetime = Field(default_factory=lambda: datetime.utcnow() + timedelta(minutes=10))
