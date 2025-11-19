@@ -1,18 +1,35 @@
 from typing import List
 
+from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Depends
+
+from app.models.article_models import ProfileModel
 from app.models.user_models import UpdateUserDTO, User
 from core.db.mongo import get_mongodb
-from core.utilies.auth.jwt_handlers import get_current_username
+from core.utilies.auth.jwt_handlers import get_current_user_id
 
 user_router = APIRouter()
 
-@user_router.get("/profile", response_model=User)
-async def profile(username: str = Depends(get_current_username), mongodb = Depends(get_mongodb)):
-    user = mongodb["users"].find_one({"username": username})
+@user_router.get("/profile", response_model=ProfileModel)
+async def profile(user_id: str = Depends(get_current_user_id), mongodb = Depends(get_mongodb)):
+    print(user_id)
+    if not user_id:
+        raise HTTPException(401, "Unauthorized")
+    pipeline = [
+        {"$match": {"_id": ObjectId(user_id)}},
+        {
+            "$lookup":{
+                "from": "articles",
+                "localField": "_id",
+                "foreignField": "author_id",
+                "as": "articles"
+            }
+        }
+    ]
+    user = await mongodb["users"].aggregate(pipeline).to_list(length=1)
     if not user:
         raise HTTPException(404, "User not found")
-    return user
+    return ProfileModel(**user[0])
 
 @user_router.get("/", response_model=List[User])
 async def read_users(mongodb = Depends(get_mongodb)):

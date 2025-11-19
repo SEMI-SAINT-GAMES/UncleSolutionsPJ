@@ -28,8 +28,8 @@ async def login(dto: LoginUser, mongodb = Depends(get_mongodb)):
         user = await mongodb["users"].find_one({"email": dto.email})
     if not user or not verify_password(dto.password, user["password"]):
         raise HTTPException(401, "Invalid credentials")
-    access = create_jwt_token({"sub": user["username"]})
-    refresh = create_jwt_token({"sub": user["username"]}, expires=1440)
+    access = create_jwt_token({"sub": user["username"], "_id": str(user["_id"])})
+    refresh = create_jwt_token({"sub": user["username"],  "_id": str(user["_id"])}, expires=1440)
     return {"access": access, "refresh": refresh}
 
 
@@ -38,10 +38,11 @@ async def refresh_token(refresh_token: str):
     try:
         payload = decode_jwt_token(refresh_token)
         username = payload.get("sub")
+        user_id = payload.get("_id")
         if not username:
             raise HTTPException(401, "Invalid token")
-        # створюємо новий access token
-        new_access = create_jwt_token({"sub": username}, expires_in=900)
-        return {"access_token": new_access, "token_type": "bearer"}
+        access = create_jwt_token({"sub": username, "_id": str(user_id)})
+        refresh = create_jwt_token({"sub": username, "_id": str(user_id)}, expires=1440)
+        return {"access": access, "refresh": refresh}
     except Exception:
         raise HTTPException(401, "Invalid or expired refresh token")

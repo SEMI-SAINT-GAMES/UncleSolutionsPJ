@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 
 from app.models.article_models import ArticleCreate, ArticleBase, Article, ArticleOut
 from core.db.mongo import get_mongodb
-from core.utilies.auth.jwt_handlers import get_current_username
+from core.utilies.auth.jwt_handlers import get_current_username, get_current_user_id
 
 article_router = APIRouter()
 
@@ -26,13 +26,13 @@ async def read_articles(mongodb=Depends(get_mongodb)):
     return [ArticleOut(**a) for a in articles]
 
 @article_router.post("/", response_model=Article)
-async def create_article(article: ArticleCreate, username: str = Depends(get_current_username), mongodb = Depends(get_mongodb)):
-    if not username:
+async def create_article(article: ArticleCreate, user_id: str = Depends(get_current_user_id), mongodb = Depends(get_mongodb)):
+    if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    user = await mongodb["users"].find_one({"username": username})
+    user = await mongodb["users"].find_one({"_id":ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    article.author_id = user["_id"]
+    article.author_id = user_id
     result = await mongodb["articles"].insert_one(article.dict())
     inserted_article = await mongodb["articles"].find_one({"_id": result.inserted_id})
     return inserted_article
@@ -57,8 +57,8 @@ async def read_article(article_id: str, mongodb = Depends(get_mongodb)):
     return ArticleOut(**article[0])
 
 
-@article_router.get("/by_username/{username}", response_model=List[ArticleOut])
-async def read_articles_by_username(username: str, mongodb=Depends(get_mongodb)):
+@article_router.get("/by_user_id/{user_id}", response_model=List[ArticleOut])
+async def read_articles_by_username(user_id: str, mongodb=Depends(get_mongodb)):
     pipeline = [
         {
             "$lookup": {
@@ -69,7 +69,7 @@ async def read_articles_by_username(username: str, mongodb=Depends(get_mongodb))
             }
         },
         {"$unwind": "$author"},
-        {"$match": {"author.username": username}}
+        {"$match": {"author._id": ObjectId(user_id)}}
     ]
 
     articles = await mongodb["articles"].aggregate(pipeline).to_list(None)

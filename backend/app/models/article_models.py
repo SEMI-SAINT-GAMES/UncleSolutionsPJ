@@ -1,10 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 
 from bson import ObjectId
 from pydantic import BaseModel, Field
 
 from app.models import PyObjectId, CreateModel
-from app.models.user_models import UserOut
+from app.models.user_models import UserOut, UserBase
 
 
 class ArticleBase(BaseModel):
@@ -28,4 +28,6 @@ class ArticleCreate(ArticleBase, CreateModel):
 class ArticleOut(Article):
     author: UserOut
 
+class ProfileModel(UserBase):
+    articles: List[Article] = []
 

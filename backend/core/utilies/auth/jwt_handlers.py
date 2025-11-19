@@ -38,3 +38,13 @@ def get_current_username(token: str = Depends(oauth2_scheme), ):
         return payload.get("sub")
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+def get_current_user_id(token: str = Depends(oauth2_scheme), ):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return user_id
+    except jwt.PyJWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
