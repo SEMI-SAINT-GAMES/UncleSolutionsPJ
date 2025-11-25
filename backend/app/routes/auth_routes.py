@@ -10,7 +10,7 @@ from core.utilies.auth.auth_utilies import hash_password, verify_password
 from core.utilies.auth.jwt_handlers import create_jwt_token, decode_jwt_token
 from core.utilies.auth.verification_handlers import get_verification_data, check_verification_data
 from core.utilies.helpers import my_rand
-
+from app.celery.tasks import send_welcome_email
 auth_router = APIRouter()
 
 
@@ -40,11 +40,11 @@ async def register_user(user: RegisterUser, mongodb=Depends(get_mongodb)):
     ver_data: VerifyModel = get_verification_data(inserted_user["username"], code,)
     await mongodb["verify_codes"].delete_many({"username": inserted_user["username"]})
     await mongodb["verify_codes"].insert_one(ver_data)
-    template = registration_template(user.name, code)
+
     try:
-        await send_email(user.email, "Welcome to Our Service", template)
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to send verification email")
+        send_welcome_email.delay(user.email, user.username, code)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to send verification email: {e}")
 
     inserted_user.pop("password", None)
     return inserted_user
@@ -85,7 +85,7 @@ async def resend_verification_code(data: UsernameRequest, mongodb=Depends(get_mo
     template = registration_template(user['name'], code)
 
     try:
-        await send_email(user["email"], "Resend Verification Code", template)
+        send_welcome_email.delay(user.email, user.username, code)
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to send verification email")
 

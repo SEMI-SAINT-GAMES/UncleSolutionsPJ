@@ -14,7 +14,7 @@ class UserBase(BaseModel):
 
 class User(UserBase):
     id: Optional[PyObjectId] = Field(alias="_id")
-    is_active: bool = True
+    is_active: bool = False
     is_author: bool = False
     class Config:
         arbitrary_types_allowed = True
