@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.celery.tasks.email_task import send_welcome_email
+from app.celery.tasks import send_welcome_email
 from app.models import (ForgotPasswordRequest, ResetPasswordRequest,
                         UsernameRequest, VerifyModel, VerifyRequest)
 from app.models.user_models import LoginUser, RegisterUser, User
