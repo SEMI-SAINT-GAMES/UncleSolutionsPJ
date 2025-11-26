@@ -1,7 +1,5 @@
-from fastapi import Depends
-import random, hashlib
+import hashlib
 from datetime import datetime, timedelta
-
 from app.models import VerifyModel
 
 

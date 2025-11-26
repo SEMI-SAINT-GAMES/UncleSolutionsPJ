@@ -1,9 +1,8 @@
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, Field
+from typing import Optional
+from app.models import CreateModel, PyObjectId, UpdateModel
 from bson import ObjectId
-
-from app.models import PyObjectId, CreateModel, UpdateModel
+from pydantic import BaseModel, Field
 
 
 class UserBase(BaseModel):

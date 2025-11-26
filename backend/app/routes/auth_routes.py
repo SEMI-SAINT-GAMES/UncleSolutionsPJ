@@ -1,25 +1,18 @@
-from fastapi import APIRouter, HTTPException, Depends, status
-from fastapi.responses import JSONResponse
 from datetime import datetime
-from app.models import (
-    VerifyModel,
-    VerifyRequest,
-    ForgotPasswordRequest,
-    ResetPasswordRequest,
-    UsernameRequest,
-)
+from app.celery.tasks.email_task import send_welcome_email
+from app.models import (ForgotPasswordRequest, ResetPasswordRequest,
+                        UsernameRequest, VerifyModel, VerifyRequest)
+from app.models.user_models import LoginUser, RegisterUser, User
 from core.db.mongo import get_mongodb
-from app.models.user_models import RegisterUser, User, LoginUser
 from core.services.email_service import send_email
 from core.services.template_service import registration_template
 from core.utilies.auth.auth_utilies import hash_password, verify_password
 from core.utilies.auth.jwt_handlers import create_jwt_token, decode_jwt_token
-from core.utilies.auth.verification_handlers import (
-    get_verification_data,
-    check_verification_data,
-)
+from core.utilies.auth.verification_handlers import (check_verification_data,
+                                                     get_verification_data)
 from core.utilies.helpers import my_rand
-from app.celery.tasks import send_welcome_email
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
 
 auth_router = APIRouter()
 
@@ -121,8 +114,6 @@ async def resend_verification_code(data: UsernameRequest, mongodb=Depends(get_mo
     ver_data: VerifyModel = get_verification_data(username, code)
     await mongodb["verify_codes"].delete_many({"username": username})
     await mongodb["verify_codes"].insert_one(ver_data)
-    template = registration_template(user["name"], code)
-
     try:
         send_welcome_email.delay(user.email, user.username, code)
     except Exception:

@@ -1,12 +1,11 @@
-from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Depends
-
 from app.models import PaginationResponseModel
 from app.models.article_models import ProfileModel
 from app.models.user_models import UpdateUserDTO, User
+from bson import ObjectId
 from core.db.mongo import get_mongodb
 from core.pagination import Pagination
 from core.utilies.auth.jwt_handlers import get_current_user_id
+from fastapi import APIRouter, Depends, HTTPException
 
 user_router = APIRouter()
 
@@ -59,7 +58,6 @@ async def profile(
         if user_data["articles"][0]["page_info"]
         else 0
     )
-    total_pages = (total_count + pagination.limit - 1) // pagination.limit
     page_info = pagination.create_user_profile_pagination_response(total_count)
     user_data["articles"] = {
         "page_info": page_info,

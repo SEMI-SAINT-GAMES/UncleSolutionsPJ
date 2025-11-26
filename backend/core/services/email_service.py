@@ -1,7 +1,8 @@
-from fastapi import HTTPException
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 import aiosmtplib
+from fastapi import HTTPException
 
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587

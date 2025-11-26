@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
-import jwt
 import os
-from fastapi.security import OAuth2PasswordBearer
+from datetime import datetime, timedelta
+
+import jwt
 from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")

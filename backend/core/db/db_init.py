@@ -1,8 +1,7 @@
 from contextlib import asynccontextmanager
 
+from core.db.mongo import close_mongo, connect_to_mongo
 from fastapi import FastAPI
-
-from core.db.mongo import connect_to_mongo, close_mongo
 
 
 @asynccontextmanager

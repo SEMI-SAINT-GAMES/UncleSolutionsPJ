@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
-from typing import Optional, TypeVar, Generic, List
-from pydantic.generics import GenericModel
+from typing import Generic, List, Optional, TypeVar
+
 from bson import ObjectId
-from pydantic import GetCoreSchemaHandler, BaseModel, Field
+from pydantic import BaseModel, Field, GetCoreSchemaHandler
+from pydantic.generics import GenericModel
 
 
 class CreateModel(BaseModel):

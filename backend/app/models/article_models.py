@@ -1,10 +1,9 @@
-from typing import Optional, List
+from typing import List, Optional
 
+from app.models import CreateModel, PyObjectId
+from app.models.user_models import User, UserOut
 from bson import ObjectId
 from pydantic import BaseModel, Field
-
-from app.models import PyObjectId, CreateModel
-from app.models.user_models import UserOut, UserBase, User
 
 
 class ArticleBase(BaseModel):

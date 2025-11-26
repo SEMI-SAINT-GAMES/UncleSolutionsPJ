@@ -1,12 +1,10 @@
-from dotenv import load_dotenv
-from fastapi import FastAPI
-
-from core.db.db_init import lifespan
+from app.routes.article_routes import article_router
 from app.routes.auth_routes import auth_router
 from app.routes.user_routes import user_router
-from app.routes.article_routes import article_router
-from core.db.mongo import get_mongodb
-from core.db.mongo import connect_to_mongo, close_mongo
+from core.db.db_init import lifespan
+from core.db.mongo import close_mongo, connect_to_mongo
+from dotenv import load_dotenv
+from fastapi import FastAPI
 
 load_dotenv()
 app = FastAPI(lifespan=lifespan)
