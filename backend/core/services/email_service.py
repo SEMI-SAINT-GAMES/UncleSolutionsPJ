@@ -1,12 +1,14 @@
-from fastapi import HTTPException
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 import aiosmtplib
+from fastapi import HTTPException
 
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SMTP_USER = "vadik505050@gmail.com"
 SMTP_PASSWORD = "hlfxcdkncihyqxkn"
+
 
 async def send_email(to: str, subject: str, body: str):
     message = MIMEMultipart()
@@ -27,4 +29,3 @@ async def send_email(to: str, subject: str, body: str):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
-

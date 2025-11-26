@@ -14,6 +14,7 @@ def registration_template(username: str, code: str) -> str:
     </html>
     """
 
+
 def reset_password_template(username: str, code: str) -> str:
     return f"""
     <html>

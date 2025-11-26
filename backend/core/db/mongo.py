@@ -1,5 +1,7 @@
 import os
+
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
+
 mongodb_client: AsyncMongoClient | None = None
 mongodb = None
 
@@ -21,18 +23,12 @@ async def connect_to_mongo():
 
 
 async def close_mongo():
-    global mongodb_client
     if mongodb_client:
         await mongodb_client.close()
         print("MongoDB connection closed")
 
 
 async def get_mongodb():
-    global mongodb
     if mongodb is None:
         await connect_to_mongo()
     return mongodb
-
-
-
-
