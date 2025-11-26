@@ -14,7 +14,6 @@ fastapi==0.121.2
 h11==0.16.0
 idna==3.11
 kombu==5.5.4
-motor==3.7.1
 packaging==25.0
 passlib==1.7.4
 prompt_toolkit==3.0.52

@@ -43,7 +43,8 @@ async def profile(user_id: str = Depends(get_current_user_id), mongodb = Depends
         }
     ]
 
-    result = await mongodb["users"].aggregate(pipeline).to_list(length=1)
+    cursor = await mongodb["users"].aggregate(pipeline)
+    result = await cursor.to_list(length=1)
     if not result:
         raise HTTPException(404, "User not found")
     user_data = result[0]
