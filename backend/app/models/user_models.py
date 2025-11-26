@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, List
 from app.models import CreateModel, PyObjectId, UpdateModel
 from bson import ObjectId
 from pydantic import BaseModel, Field
