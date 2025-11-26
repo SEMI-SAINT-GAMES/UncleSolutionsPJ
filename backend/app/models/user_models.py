@@ -1,9 +1,9 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-
+from bson import ObjectId
 from typing import Optional
 from app.models import CreateModel, PyObjectId, UpdateModel
-from bson import ObjectId
+
 
 
 
