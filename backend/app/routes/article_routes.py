@@ -40,7 +40,8 @@ async def read_articles(mongodb=Depends(get_mongodb),pagination: Pagination = De
         {"$skip": pagination.skip},
         {"$limit": pagination.limit}
     ]
-    articles = await mongodb["articles"].aggregate(pipeline).to_list(None)
+    cursor = await mongodb["articles"].aggregate(pipeline)
+    articles = await cursor.to_list(length=None)
     response = pagination.create_pagination_response(total, [ArticleOut(**a) for a in articles])
     return response
 
@@ -68,7 +69,8 @@ async def create_article(article: ArticleCreate, user_id: str = Depends(get_curr
         {"$unwind": "$author"}
 
     ]
-    inserted_article = await mongodb["articles"].aggregate(pipeline).to_list(1)
+    cursor = await mongodb["articles"].aggregate(pipeline)
+    inserted_article = await cursor.to_list(1)
     print(inserted_article)
     return ArticleOut(**inserted_article[0])
 
@@ -86,7 +88,8 @@ async def read_article(article_id: str, mongodb = Depends(get_mongodb)):
         },
         {"$unwind": "$author"}
     ]
-    article = await mongodb["articles"].aggregate(pipeline).to_list(length=1)
+    cursor = await mongodb["articles"].aggregate(pipeline)
+    article = await cursor.to_list(1)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     return ArticleOut(**article[0])
@@ -109,7 +112,8 @@ async def read_articles_by_username(user_id: str, mongodb=Depends(get_mongodb), 
         {"$limit": pagination.limit}
     ]
     total = await mongodb["articles"].count_documents({"author_id": ObjectId(user_id)}, {"is_active" : True})
-    articles = await mongodb["articles"].aggregate(pipeline).to_list(None)
+    cursor = await mongodb["articles"].aggregate(pipeline)
+    articles = await cursor.to_list(None)
     response = pagination.create_pagination_response(total, [ArticleOut(**a) for a in articles])
     return response
 
