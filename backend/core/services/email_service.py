@@ -8,6 +8,7 @@ SMTP_PORT = 587
 SMTP_USER = "vadik505050@gmail.com"
 SMTP_PASSWORD = "hlfxcdkncihyqxkn"
 
+
 async def send_email(to: str, subject: str, body: str):
     message = MIMEMultipart()
     message["From"] = SMTP_USER
@@ -27,4 +28,3 @@ async def send_email(to: str, subject: str, body: str):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
-

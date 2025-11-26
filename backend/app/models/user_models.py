@@ -12,17 +12,21 @@ class UserBase(BaseModel):
     username: str
     email: str
 
+
 class User(UserBase):
     id: Optional[PyObjectId] = Field(alias="_id")
     is_active: bool = False
     is_author: bool = False
+
     class Config:
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
+
 class RegisterUser(UserBase, CreateModel):
     password: str
     is_author: bool = False
+
 
 class LoginUser(BaseModel):
     username: Optional[str] = None
@@ -34,6 +38,7 @@ class LoginUser(BaseModel):
 class UpdateUserDTO(UserBase, UpdateModel):
     pass
 
+
 class UserOut(BaseModel):
     id: PyObjectId = Field(alias="_id")
     name: str
@@ -44,6 +49,3 @@ class UserOut(BaseModel):
     class Config:
         allow_population_by_field_name = True
         json_encoders = {ObjectId: str}
-
-
-

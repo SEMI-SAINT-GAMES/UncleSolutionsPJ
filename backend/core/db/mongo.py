@@ -1,5 +1,6 @@
 import os
 from pymongo.asynchronous.mongo_client import AsyncMongoClient
+
 mongodb_client: AsyncMongoClient | None = None
 mongodb = None
 
@@ -32,7 +33,3 @@ async def get_mongodb():
     if mongodb is None:
         await connect_to_mongo()
     return mongodb
-
-
-
-
