@@ -29,12 +29,12 @@ jobs:
 
       - name: Check code style with Black
         run: |
-          black --check app core  
+          black --check backend  
 
       - name: Check import order with Isort
         run: |
-          isort --check-only app core   
+          isort --check-only backend  
 
       - name: Check code style with Flake8
         run: |
-          flake8 app core --count --statistics --show-source
+          flake8 backend --count --statistics --show-source
