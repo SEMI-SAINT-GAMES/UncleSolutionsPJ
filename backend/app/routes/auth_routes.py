@@ -1,15 +1,23 @@
 from datetime import datetime
+
 from app.celery.tasks import send_welcome_email
-from app.models import (ForgotPasswordRequest, ResetPasswordRequest,
-                        UsernameRequest, VerifyModel, VerifyRequest)
+from app.models import (
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+    UsernameRequest,
+    VerifyModel,
+    VerifyRequest,
+)
 from app.models.user_models import LoginUser, RegisterUser, User
 from core.db.mongo import get_mongodb
 from core.services.email_service import send_email
 from core.services.template_service import registration_template
 from core.utilies.auth.auth_utilies import hash_password, verify_password
 from core.utilies.auth.jwt_handlers import create_jwt_token, decode_jwt_token
-from core.utilies.auth.verification_handlers import (check_verification_data,
-                                                     get_verification_data)
+from core.utilies.auth.verification_handlers import (
+    check_verification_data,
+    get_verification_data,
+)
 from core.utilies.helpers import my_rand
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
