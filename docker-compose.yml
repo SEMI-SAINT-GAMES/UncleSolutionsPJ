@@ -1,0 +1,80 @@
+version: "3.9"
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - project-network
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+    command: ["--quiet"]
+    logging:
+      driver: "none"
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6380:6379"
+    networks:
+      - project-network
+
+  fastapi-backend:
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    container_name: fastapi-backend
+    ports:
+      - "8000:8000"
+    networks:
+      - project-network
+    depends_on:
+      - mongodb
+      - redis
+    volumes:
+      - ./backend:/app
+
+  celery_worker:
+    build:
+      context: ./backend
+    container_name: celery_worker
+    command: celery -A app.celery.celery_app worker --loglevel=info
+    working_dir: /app
+    networks:
+      - project-network
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - redis
+      - fastapi-backend
+    volumes:
+      - ./backend:/app
+
+  celery_beat:
+    build:
+      context: ./backend
+    container_name: celery_beat
+    command: celery -A app.celery.celery_app beat --loglevel=info
+    working_dir: /app
+    networks:
+      - project-network
+    environment:
+      - PYTHONPATH=/app
+    depends_on:
+      - redis
+      - fastapi-backend
+    volumes:
+      - ./backend:/app
+
+volumes:
+  mongodb_data:
+
+networks:
+  project-network:
