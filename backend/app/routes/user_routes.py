@@ -15,7 +15,7 @@ async def profile(
     user_id: str = Depends(get_current_user_id),
     mongodb=Depends(get_mongodb),
     pagination: Pagination = Depends(),
-):
+) -> ProfileModel:
     if not user_id:
         raise HTTPException(401, "Unauthorized")
 
@@ -67,7 +67,7 @@ async def profile(
 
 
 @user_router.get("/", response_model=PaginationResponseModel[User])
-async def read_users(mongodb=Depends(get_mongodb), pagination: Pagination = Depends()):
+async def read_users(mongodb=Depends(get_mongodb), pagination: Pagination = Depends()) -> dict[str, int | list]:
     total = await mongodb["users"].count_documents({"is_active": True})
     cursor = (
         mongodb["users"]
@@ -81,7 +81,7 @@ async def read_users(mongodb=Depends(get_mongodb), pagination: Pagination = Depe
 
 
 @user_router.get("/{email}", response_model=User)
-async def read_user_by_email(email: str, mongodb=Depends(get_mongodb)):
+async def read_user_by_email(email: str, mongodb=Depends(get_mongodb)) -> User:
     user = await mongodb["users"].find_one({"email": email})
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -89,7 +89,7 @@ async def read_user_by_email(email: str, mongodb=Depends(get_mongodb)):
 
 
 @user_router.put("/update/{email}", response_model=User)
-async def update_user(email: str, dto: UpdateUserDTO, mongodb=Depends(get_mongodb)):
+async def update_user(email: str, dto: UpdateUserDTO, mongodb=Depends(get_mongodb)) -> User:
     await mongodb["users"].update_one(
         {"email": email}, {"$set": dto.dict(exclude_unset=True)}
     )

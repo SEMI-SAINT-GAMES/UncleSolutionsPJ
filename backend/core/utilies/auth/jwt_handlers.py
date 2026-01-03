@@ -12,7 +12,7 @@ ALGORITHM = os.getenv("ALGORITHM")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def create_jwt_token(data: dict, expires: int | None = None):
+def create_jwt_token(data: dict, expires: int | None = None) -> str:
     to_encode = data.copy()
     if expires:
         expire = datetime.utcnow() + timedelta(minutes=expires)
@@ -23,7 +23,7 @@ def create_jwt_token(data: dict, expires: int | None = None):
     return encoded_jwt
 
 
-def decode_jwt_token(token: str):
+def decode_jwt_token(token: str) -> dict:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
@@ -33,13 +33,13 @@ def decode_jwt_token(token: str):
         raise Exception("Invalid token")
 
 
-def refresh_jwt_token(payload: str):
+def refresh_jwt_token(payload: str) -> str:
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
 def get_current_username(
     token: str = Depends(oauth2_scheme),
-):
+) -> str:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload.get("sub")
@@ -49,7 +49,7 @@ def get_current_username(
 
 def get_current_user_id(
     token: str = Depends(oauth2_scheme),
-):
+) -> str:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("_id")
@@ -60,7 +60,7 @@ def get_current_user_id(
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-def create_data_jwt_token(token: str, expires: datetime, type: str):
+def create_data_jwt_token(token: str, expires: datetime, type: str) -> dict:
     user_id = get_current_user_id(token)
     data = {"token": token, "type": type, "expire_at": expires, "user_id": user_id}
     return data

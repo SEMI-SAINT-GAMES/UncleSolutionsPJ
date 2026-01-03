@@ -6,7 +6,7 @@ mongodb_client: AsyncMongoClient | None = None
 mongodb = None
 
 
-async def connect_to_mongo():
+async def connect_to_mongo() -> AsyncMongoClient | None:
     print("Connecting to MongoDB...")
     print(os.getenv("MONGO_URL"))
     global mongodb_client, mongodb
@@ -28,7 +28,7 @@ async def close_mongo():
         print("MongoDB connection closed")
 
 
-async def get_mongodb():
+async def get_mongodb() -> AsyncMongoClient | None:
     if mongodb is None:
         await connect_to_mongo()
     return mongodb

@@ -7,7 +7,7 @@ class Pagination:
         self.limit = limit
         self.skip = self.limit * (page - 1)
 
-    def create_pagination_response(self, total_count: int, items: list):
+    def create_pagination_response(self, total_count: int, items: list) -> dict:
         return {
             "total_count": total_count,
             "total_pages": total_count // self.limit
@@ -17,7 +17,7 @@ class Pagination:
             "items": items,
         }
 
-    def create_user_profile_pagination_response(self, total_count: int):
+    def create_user_profile_pagination_response(self, total_count: int) -> dict:
         paginated_with_info = {
             "total_count": total_count,
             "total_pages": total_count // self.limit

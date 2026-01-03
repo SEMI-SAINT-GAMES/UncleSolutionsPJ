@@ -15,7 +15,7 @@ async def read_articles(
     pagination: Pagination = Depends(),
     search: str | None = None,
     tags: str | None = None,
-):
+) -> dict[str, int | list]:
     pipeline = []
 
     if search:
@@ -61,7 +61,7 @@ async def create_article(
     article: ArticleCreate,
     user_id: str = Depends(get_current_user_id),
     mongodb=Depends(get_mongodb),
-):
+) -> ArticleOut:
 
     if not user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
@@ -90,7 +90,7 @@ async def create_article(
 
 
 @article_router.get("/{article_id}", response_model=ArticleOut)
-async def read_article(article_id: str, mongodb=Depends(get_mongodb)):
+async def read_article(article_id: str, mongodb=Depends(get_mongodb)) -> ArticleOut:
     pipeline = [
         {"$match": {"_id": ObjectId(article_id)}},
         {
@@ -115,7 +115,7 @@ async def read_article(article_id: str, mongodb=Depends(get_mongodb)):
 )
 async def read_articles_by_username(
     user_id: str, mongodb=Depends(get_mongodb), pagination: Pagination = Depends()
-):
+) -> dict[str, int | list]:
     pipeline = [
         {
             "$lookup": {

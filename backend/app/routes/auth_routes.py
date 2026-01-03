@@ -36,7 +36,7 @@ def _make_tokens(username: str, user_id: str | None = None) -> dict[str, str]:
 
 
 @auth_router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
-async def register_user(user: RegisterUser, mongodb=Depends(get_mongodb)):
+async def register_user(user: RegisterUser, mongodb=Depends(get_mongodb)) -> User:
     existing_user = await mongodb["users"].find_one(
         {"$or": [{"email": user.email}, {"username": user.username}]}
     )
@@ -75,7 +75,7 @@ async def register_user(user: RegisterUser, mongodb=Depends(get_mongodb)):
 
 
 @auth_router.post("/verify")
-async def verify_user(verify: VerifyRequest, mongodb=Depends(get_mongodb)):
+async def verify_user(verify: VerifyRequest, mongodb=Depends(get_mongodb)) -> dict[str, str]:
     if not verify.username or not verify.code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -106,7 +106,7 @@ async def verify_user(verify: VerifyRequest, mongodb=Depends(get_mongodb)):
 
 
 @auth_router.post("/resend-code")
-async def resend_verification_code(data: UsernameRequest, mongodb=Depends(get_mongodb)):
+async def resend_verification_code(data: UsernameRequest, mongodb=Depends(get_mongodb)) -> dict[str, str]:
     username = data.username
     user = await mongodb["users"].find_one({"username": username})
     if not user:
@@ -136,7 +136,7 @@ async def resend_verification_code(data: UsernameRequest, mongodb=Depends(get_mo
 @auth_router.post("/forgot-password/request")
 async def forgot_password_request(
     req: ForgotPasswordRequest, mongodb=Depends(get_mongodb)
-):
+) -> JSONResponse | dict[str, str]:
     user = await mongodb["users"].find_one({"email": req.email})
     if not user:
         return JSONResponse(
@@ -168,7 +168,7 @@ async def forgot_password_request(
 @auth_router.post("/forgot-password/verify")
 async def forgot_password_verify(
     payload: ResetPasswordRequest, mongodb=Depends(get_mongodb)
-):
+) -> dict[str, str]:
     verify = payload.verify
     if not verify.username or not verify.code:
         raise HTTPException(
@@ -194,7 +194,7 @@ async def forgot_password_verify(
 
 
 @auth_router.post("/login")
-async def login(dto: LoginUser, mongodb=Depends(get_mongodb)):
+async def login(dto: LoginUser, mongodb=Depends(get_mongodb)) -> dict[str, str]:
     user = None
     if getattr(dto, "username", None):
         user = await mongodb["users"].find_one({"username": dto.username})
@@ -216,7 +216,7 @@ async def login(dto: LoginUser, mongodb=Depends(get_mongodb)):
 
 
 @auth_router.post("/refresh")
-async def refresh_token(refresh_token: str):
+async def refresh_token(refresh_token: str) -> dict[str, str]:
     try:
         payload = decode_jwt_token(refresh_token)
     except Exception:
