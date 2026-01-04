@@ -136,7 +136,7 @@ async def resend_verification_code(data: UsernameRequest, mongodb=Depends(get_mo
 @auth_router.post("/forgot-password/request")
 async def forgot_password_request(
     req: ForgotPasswordRequest, mongodb=Depends(get_mongodb)
-) -> JSONResponse | dict[str, str]:
+):
     user = await mongodb["users"].find_one({"email": req.email})
     if not user:
         return JSONResponse(

@@ -23,12 +23,14 @@ async def connect_to_mongo() -> AsyncMongoClient | None:
 
 
 async def close_mongo():
+    global mongodb_client
     if mongodb_client:
         await mongodb_client.close()
         print("MongoDB connection closed")
 
 
 async def get_mongodb() -> AsyncMongoClient | None:
+    global mongodb
     if mongodb is None:
-        await connect_to_mongo()
+        mongodb = await connect_to_mongo()
     return mongodb
