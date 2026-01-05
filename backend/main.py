@@ -10,7 +10,6 @@ load_dotenv()
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(user_router, prefix="/users", tags=["Users"])
-
 app.include_router(article_router, prefix="/articles", tags=["Articles"])
 
 

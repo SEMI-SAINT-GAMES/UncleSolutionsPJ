@@ -8,7 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException
 
 article_router = APIRouter()
 
-
+@article_router.get("/health")
+async def health_check():
+    return {"status": "ok"}
 @article_router.get("/", response_model=PaginationResponseModel[ArticleOut])
 async def read_articles(
     mongodb=Depends(get_mongodb),
