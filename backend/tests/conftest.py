@@ -89,31 +89,63 @@ class FakeCollection:
 
         return FakeCursor(data)
 
+    def _get_nested_value(self, item: dict, path: str):
+        value = item
+        for part in path.split("."):
+            if not isinstance(value, dict):
+                return None
+            value = value.get(part)
+        return value
+
+    def _match_condition(self, item, condition: dict) -> bool:
+        for field, rule in condition.items():
+            value = self._get_nested_value(item, field)
+
+            if isinstance(rule, dict):
+                if "$regex" in rule:
+                    if value is None:
+                        return False
+                    if rule["$regex"].lower() not in str(value).lower():
+                        return False
+
+                elif "$in" in rule:
+                    if not isinstance(value, list):
+                        return False
+                    if not any(v in value for v in rule["$in"]):
+                        return False
+
+                else:
+                    return False
+
+            else:
+                if value != rule:
+                    return False
+
+        return True
+
     def _apply_match(self, data, match):
         if not match:
             return data
 
-        if "$or" in match:
-            result = []
-            for item in data:
-                for condition in match["$or"]:
-                    for field, rule in condition.items():
-                        if "$regex" in rule:
-                            if rule["$regex"].lower() in item.get(field, "").lower():
-                                result.append(item)
-                                break
-            return result
+        result = []
 
-        if "tags" in match and "$in" in match["tags"]:
-            return [
-                item for item in data
-                if any(tag in item.get("tags", []) for tag in match["tags"]["$in"])
-            ]
+        for item in data:
+            ok = True
 
-        return [
-            item for item in data
-            if all(item.get(k) == v for k, v in match.items())
-        ]
+            for key, value in match.items():
+                if key == "$or":
+                    if not any(self._match_condition(item, cond) for cond in value):
+                        ok = False
+                        break
+                else:
+                    if not self._match_condition(item, {key: value}):
+                        ok = False
+                        break
+
+            if ok:
+                result.append(item)
+
+        return result
 
 
 class FakeMongoDB(dict):

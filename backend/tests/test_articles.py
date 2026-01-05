@@ -58,8 +58,8 @@ async def test_read_articles_with_filters(
     assert "total_count" in data
     assert isinstance(data["items"], list)
 
-    assert data["total_count"] == 3
-    assert len(data["items"]) == 3
+    assert data["total_count"] == 2
+    assert len(data["items"]) == 2
 
     titles = {item["title"] for item in data["items"]}
 
@@ -162,3 +162,86 @@ async def test_read_article_by_id_not_found(override_mongodb):
     assert response.json()["detail"] == "Article not found"
 
 
+@pytest.mark.asyncio
+async def test_read_articles_by_user_id_success(override_mongodb):
+    user_id = ObjectId()
+
+    override_mongodb["users"]._data.append(
+        {
+            "_id": user_id,
+            "name": "Test",
+            "surname": "User",
+            "username": "testuser",
+            "email": "test@test.com",
+        }
+    )
+
+    override_mongodb["articles"]._data.extend(
+        [
+            {
+                "_id": ObjectId(),
+                "title": "Active article 1",
+                "content": "Content 1",
+                "tags": ["python"],
+                "author_id": user_id,
+                "is_active": True,
+            },
+            {
+                "_id": ObjectId(),
+                "title": "Active article 2",
+                "content": "Content 2",
+                "tags": ["fastapi"],
+                "author_id": user_id,
+                "is_active": True,
+            },
+            {
+                "_id": ObjectId(),
+                "title": "Inactive article",
+                "content": "Content 3",
+                "tags": ["django"],
+                "author_id": user_id,
+                "is_active": False,
+            },
+        ]
+    )
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as client:
+        response = await client.get(f"/articles/by_user_id/{user_id}")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["total_count"] == 2
+    assert len(data["items"]) == 2
+
+    titles = {item["title"] for item in data["items"]}
+
+    assert "Active article 1" in titles
+    assert "Active article 2" in titles
+    assert "Inactive article" not in titles
+
+
+@pytest.mark.asyncio
+async def test_read_articles_by_user_id_empty(override_mongodb):
+    user_id = ObjectId()
+
+    transport = ASGITransport(app=app)
+
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as client:
+        response = await client.get(f"/articles/by_user_id/{user_id}")
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["total_count"] == 0
+    assert data["items"] == []
