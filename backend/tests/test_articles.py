@@ -5,6 +5,7 @@ from httpx import AsyncClient, ASGITransport
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from main import app
 
+
 @pytest.mark.asyncio
 async def test_read_articles_simple(override_mongodb):
     transport = ASGITransport(app=app)
@@ -64,3 +65,38 @@ async def test_read_articles_with_filters(
     assert "FastAPI testing" in titles
     assert "Django testing" in titles
     assert "MongoDB tips" not in titles
+
+
+@pytest.mark.asyncio
+async def test_create_article_success(
+    override_mongodb,
+    override_current_user,
+):
+
+    transport = ASGITransport(app=app)
+
+    payload = {
+        "title": "My first article",
+        "content": "Hello from test",
+        "tags": ["python", "fastapi"],
+    }
+
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as client:
+        response = await client.post("/articles/", json=payload)
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["title"] == payload["title"]
+    assert data["content"] == payload["content"]
+    assert data["tags"] == payload["tags"]
+
+    assert "_id" in data
+    assert isinstance(data["_id"], str)
+
+    assert "author" in data
+    assert data["author"]["email"] == "test@test.com"
