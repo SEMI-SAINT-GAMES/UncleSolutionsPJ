@@ -2,8 +2,6 @@ import sys
 import os
 import pytest
 from bson import ObjectId
-
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.utilies.auth.jwt_handlers import get_current_user_id
 from core.db.mongo import get_mongodb
@@ -153,10 +151,11 @@ class FakeMongoDB(dict):
         super().__init__()
         self["articles"] = FakeCollection()
         self["users"] = FakeCollection()
+        self["verify_codes"] = FakeCollection()
 
-        # back-references для $lookup
         self["articles"]._db = self
         self["users"]._db = self
+        self["verify_codes"]._db = self
 
 
 @pytest.fixture

@@ -48,7 +48,7 @@ async def register_user(user: RegisterUser, mongodb=Depends(get_mongodb)) -> Use
 
     user_dict = user.dict()
     user_dict["password"] = hash_password(user.password)
-    user_dict.setdefault("is_active", False)
+    user_dict["is_active"] = False
     user_dict.setdefault("created_at", datetime.utcnow())
 
     insert_result = await mongodb["users"].insert_one(user_dict)
